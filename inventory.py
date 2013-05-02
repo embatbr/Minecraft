@@ -1,5 +1,19 @@
-from items import *
+# Imports, sorted alphabetically.
+
+# Python packages
 import sys
+
+# Third-party packages
+# Nothing for now...
+
+# Modules from this project
+from items import *
+
+
+__all__ = (
+    'Inventory',
+)
+
 
 class Inventory(object):
     sort_mode = 0
@@ -11,17 +25,12 @@ class Inventory(object):
     def find_empty_slot(self):
         return next((index for index,value in enumerate(self.slots) if not value), -1)
 
-    def add_item(self, item_id, quantity = 1):
-        if quantity < 1:
+    def add_item(self, item_id, quantity = 1, durability = -1):
+        if quantity < 1 or item_id == 0:
             return False
 
         item_stack = self.get_item(item_id)
-        if item_id >= ITEM_ID_MIN:
-            max_size = ITEMS_DIR[item_id].max_stack_size
-        else:
-            max_size = BLOCKS_DIR[item_id].max_stack_size
-
-        
+        max_size = get_item(item_id).max_stack_size
         retval = False
         while quantity > 0:
             # can't find an unfilled slot
@@ -35,9 +44,9 @@ class Inventory(object):
                 # overflow ?
                 if quantity > max_size:
                     quantity -= max_size
-                    item_stack = ItemStack(type=item_id, amount=max_size)
+                    item_stack = ItemStack(type=item_id, amount=max_size, durability=durability)
                 else:
-                    item_stack = ItemStack(type=item_id, amount=quantity)
+                    item_stack = ItemStack(type=item_id, amount=quantity, durability=durability)
                     quantity = 0
 
                 self.slots[index] = item_stack
@@ -73,6 +82,11 @@ class Inventory(object):
 
     def remove_all_by_index(self, index):
         self.slots[index] = None
+
+    def remove_unnecessary_stacks(self):
+        for i, slot in enumerate(self.slots):
+            if slot and slot.amount == 0:
+                self.slots[i] = None
 
     def sort(self, reverse=True):
         if self.sort_mode == 0:
@@ -114,5 +128,5 @@ class Inventory(object):
     def __str__(self):
         return str(self.__dict__)
 
-    def __eq__(self, other): 
+    def __eq__(self, other):
         return self.__dict__ == other.__dict__
